@@ -52,7 +52,7 @@ function getClassStatus(termID, classID, callback) {
 }
 
 $(document).ready(function() {
-    $.getJSON('/ajax/terms.json').done(function(terms) {
+    $.getJSON('ajax/terms.json').done(function(terms) {
         $.each(terms, function(termName, termID) {
             $('#termID').append($('<option>', {value : termID}).text(termName));
         });
