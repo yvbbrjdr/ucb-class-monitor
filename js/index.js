@@ -5,7 +5,7 @@ const queryBaseURL = 'http://classes.berkeley.edu/enrollment/update/';
 function getClassStatus(termID, classID, callback) {
     const queryURL = queryBaseURL + termID + '/' + classID;
     $.getJSON('https://query.yahooapis.com/v1/public/yql?q=' + encodeURIComponent('select * from json where url="' + queryURL + '"') + '&format=json').done(function(data) {
-        callback(data['query']['results']['json']);
+        callback(data.query.results.json);
     }).fail(function() {
         callback(null);
     });
@@ -32,7 +32,7 @@ $(document).ready(function() {
             getClassStatus($('#termID').val(), classID, function(data) {
                 if (data == null) {
                     window.alert('Unknown network error!');
-                } else if (data['classSections'] == null) {
+                } else if (data.classSections == null) {
                     window.alert('You entered an invalid Class ID!');
                     $('#classID').val('');
                     $('#classID').focus();
