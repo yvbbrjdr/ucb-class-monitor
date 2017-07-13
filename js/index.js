@@ -2,17 +2,57 @@
 
 const queryBaseURL = 'http://classes.berkeley.edu/enrollment/update/';
 
+function Record(termID, classID, status) {
+    this.termID = termID;
+    this.classID = classID;
+    this.status = status;
+    this.sameID = function(rhs) {
+        return this.termID == rhs.termID && this.classID == rhs.classID;
+    };
+    this.getStatus = function(callback) {
+        getClassStatus(this.termID, this.classID, function(data) {
+            if (callback != null) {
+                callback(data);
+            }
+        });
+    };
+    this.makeRow = function() {
+        var content = '<tr>';
+        content += '<td>' + this.termID + '</td>';
+        content += '<td>' + this.status.classSections.id + '</td>';
+        var status;
+        if (parseInt(this.status.classSections.enrollmentStatus.enrolledCount) < parseInt(this.status.classSections.enrollmentStatus.maxEnroll)) {
+            status = 'Open';
+        } else if (parseInt(this.status.classSections.enrollmentStatus.waitlistedCount) < parseInt(this.status.classSections.enrollmentStatus.maxWaitlist)) {
+            status = 'Wait List';
+        } else {
+            status = 'Closed';
+        }
+        content += '<td>' + status + '</td>';
+        content += '<td>' + this.status.classSections.enrollmentStatus.enrolledCount + ' / ' + this.status.classSections.enrollmentStatus.maxEnroll + '</td>';
+        content += '<td>' + this.status.classSections.enrollmentStatus.waitlistedCount + ' / ' + this.status.classSections.enrollmentStatus.maxWaitlist + '</td>';
+        content += '<td>' + new Date(parseInt(this.status.changed) * 1000).toLocaleString() + '</td>';
+        content += '<td><button type="button" class="btn btn-danger btn-xs">Delete</button></td>';
+        content += '</tr>';
+        return content;
+    };
+}
+
+var classList = [];
+
 function getClassStatus(termID, classID, callback) {
     const queryURL = queryBaseURL + termID + '/' + classID;
-    $.getJSON('https://query.yahooapis.com/v1/public/yql?q=' + encodeURIComponent('select * from json where url="' + queryURL + '"') + '&format=json').done(function(data) {
+    $.getJSON('//query.yahooapis.com/v1/public/yql?q=' + encodeURIComponent('select * from json where url="' + queryURL + '"') + '&format=json').done(function(data) {
         callback(data.query.results.json);
     }).fail(function() {
-        callback(null);
+        if (callback != null) {
+            callback(null);
+        }
     });
 }
 
 $(document).ready(function() {
-    $.getJSON('ajax/terms.json').done(function(terms) {
+    $.getJSON('/ajax/terms.json').done(function(terms) {
         $.each(terms, function(termName, termID) {
             $('#termID').append($('<option>', {value : termID}).text(termName));
         });
@@ -26,10 +66,11 @@ $(document).ready(function() {
         }
     });
     $('#selectBtn').click(function() {
+        const termID = $('#termID').val();
         const classID = $('#classID').val();
         if (/^\d+$/.test(classID) && classID.length == 5) {
             $('#selectBtn').prop('disabled', true);
-            getClassStatus($('#termID').val(), classID, function(data) {
+            getClassStatus(termID, classID, function(data) {
                 if (data == null) {
                     window.alert('Unknown network error!');
                 } else if (data.classSections == null) {
@@ -37,7 +78,24 @@ $(document).ready(function() {
                     $('#classID').val('');
                     $('#classID').focus();
                 } else {
-                    window.alert(JSON.stringify(data));
+                    const record = new Record(termID, classID, data);
+                    var ok = true;
+                    $.each(classList, function(index, value) {
+                        if (value.sameID(record)) {
+                            ok = false;
+                            return false;
+                        }
+                    });
+                    if (ok) {
+                        classList.push(record);
+                        $('#tableBody').append(record.makeRow());
+                        $('#classID').val('');
+                        $('#classID').focus();
+                    } else {
+                        window.alert('You had selected this class!');
+                        $('#classID').val('');
+                        $('#classID').focus();
+                    }
                 }
                 $('#selectBtn').prop('disabled', false);
             });
