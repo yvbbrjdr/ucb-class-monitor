@@ -28,6 +28,7 @@ $(document).ready(function() {
     $('#selectBtn').click(function() {
         const classID = $('#classID').val();
         if (/^\d+$/.test(classID) && classID.length == 5) {
+            $('#selectBtn').prop('disabled', true);
             getClassStatus($('#termID').val(), classID, function(data) {
                 if (data == null) {
                     window.alert('Unknown network error!');
@@ -38,6 +39,7 @@ $(document).ready(function() {
                 } else {
                     window.alert(JSON.stringify(data));
                 }
+                $('#selectBtn').prop('disabled', false);
             });
         } else {
             window.alert('Please enter a five-digit integer in Class ID!');
