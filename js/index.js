@@ -25,12 +25,13 @@ function Record(termID, classID, status) {
         return this.termID == rhs.termID && this.classID == rhs.classID;
     };
     this.updateStatus = function(callback) {
+        const self = this;
         getClassStatus(this.termID, this.classID, function(data) {
             var changed = false;
-            if (this.status.classSections.enrollmentStatus.enrolledCount != data.classSections.enrollmentStatus.enrolledCount || this.status.classSections.enrollmentStatus.waitlistedCount != data.classSections.enrollmentStatus.waitlistedCount) {
+            if (self.status.classSections.enrollmentStatus.enrolledCount != data.classSections.enrollmentStatus.enrolledCount || self.status.classSections.enrollmentStatus.waitlistedCount != data.classSections.enrollmentStatus.waitlistedCount) {
                 changed = true;
             }
-            this.status = data;
+            self.status = data;
             if (callback != null) {
                 callback(changed);
             }
@@ -123,6 +124,13 @@ $(document).ready(function() {
             $('#classID').val('');
             $('#classID').focus();
         }
+    });
+    $('#refreshNowBtn').click(function() {
+        $.each(classList, function(index, record) {
+            record.updateStatus(function() {
+                makeTable();
+            });
+        });
     });
     const ls = localStorage.getItem('classList');
     if (ls != null) {
