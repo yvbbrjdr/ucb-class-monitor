@@ -2,6 +2,21 @@
 
 const queryBaseURL = 'http://classes.berkeley.edu/enrollment/update/';
 
+var classList = [];
+
+function getClassStatus(termID, classID, callback) {
+    const queryURL = queryBaseURL + termID + '/' + classID;
+    $.getJSON('//query.yahooapis.com/v1/public/yql?q=' + encodeURIComponent('select * from json where url="' + queryURL + '"') + '&format=json').done(function(data) {
+        if (callback != null) {
+            callback(data.query.results.json);
+        }
+    }).fail(function() {
+        if (callback != null) {
+            callback(null);
+        }
+    });
+}
+
 function Record(termID, classID, status) {
     this.termID = termID;
     this.classID = classID;
@@ -9,14 +24,19 @@ function Record(termID, classID, status) {
     this.sameID = function(rhs) {
         return this.termID == rhs.termID && this.classID == rhs.classID;
     };
-    this.getStatus = function(callback) {
+    this.updateStatus = function(callback) {
         getClassStatus(this.termID, this.classID, function(data) {
+            var changed = false;
+            if (this.status.classSections.enrollmentStatus.enrolledCount != data.classSections.enrollmentStatus.enrolledCount || this.status.classSections.enrollmentStatus.waitlistedCount != data.classSections.enrollmentStatus.waitlistedCount) {
+                changed = true;
+            }
+            this.status = data;
             if (callback != null) {
-                callback(data);
+                callback(changed);
             }
         });
     };
-    this.makeRow = function() {
+    this.makeRow = function(index) {
         var content = '<tr>';
         content += '<td>' + this.termID + '</td>';
         content += '<td>' + this.status.classSections.id + '</td>';
@@ -32,23 +52,22 @@ function Record(termID, classID, status) {
         content += '<td>' + this.status.classSections.enrollmentStatus.enrolledCount + ' / ' + this.status.classSections.enrollmentStatus.maxEnroll + '</td>';
         content += '<td>' + this.status.classSections.enrollmentStatus.waitlistedCount + ' / ' + this.status.classSections.enrollmentStatus.maxWaitlist + '</td>';
         content += '<td>' + new Date(parseInt(this.status.changed) * 1000).toLocaleString() + '</td>';
-        content += '<td><button type="button" class="btn btn-danger btn-xs">Delete</button></td>';
+        content += '<td><button type="button" class="btn btn-danger btn-xs" id="' + index + '">Delete</button></td>';
         content += '</tr>';
         return content;
     };
 }
 
-var classList = [];
-
-function getClassStatus(termID, classID, callback) {
-    const queryURL = queryBaseURL + termID + '/' + classID;
-    $.getJSON('//query.yahooapis.com/v1/public/yql?q=' + encodeURIComponent('select * from json where url="' + queryURL + '"') + '&format=json').done(function(data) {
-        callback(data.query.results.json);
-    }).fail(function() {
-        if (callback != null) {
-            callback(null);
-        }
+function makeTable() {
+    $('#tableBody').empty();
+    $.each(classList, function(index, record) {
+        $('#tableBody').append(record.makeRow(index));
+        $('button#' + index).click(function() {
+            classList.splice(index, 1);
+            makeTable();
+        });
     });
+    localStorage.setItem('classList', JSON.stringify(classList));
 }
 
 $(document).ready(function() {
@@ -88,7 +107,7 @@ $(document).ready(function() {
                     });
                     if (ok) {
                         classList.push(record);
-                        $('#tableBody').append(record.makeRow());
+                        makeTable();
                         $('#classID').val('');
                         $('#classID').focus();
                     } else {
@@ -105,4 +124,12 @@ $(document).ready(function() {
             $('#classID').focus();
         }
     });
+    const ls = localStorage.getItem('classList');
+    if (ls != null) {
+        classList = JSON.parse(ls);
+        for (var i = 0 ; i < classList.length ; i++) {
+            classList[i] = new Record(classList[i].termID, classList[i].classID, classList[i].status);
+        }
+        makeTable();
+    }
 });
