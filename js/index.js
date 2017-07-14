@@ -120,10 +120,12 @@ $(document).ready(function() {
                         classList.push(record);
                         makeTable();
                         $('#classID').val('');
+                        $('#className').val('');
                         $('#classID').focus();
                     } else {
                         window.alert('You had selected this class!');
                         $('#classID').val('');
+                        $('#className').val('');
                         $('#classID').focus();
                     }
                 }
