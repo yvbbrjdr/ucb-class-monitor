@@ -8,6 +8,7 @@ function getClassStatus(termID, classID, callback) {
     const queryURL = queryBaseURL + termID + '/' + classID;
     $.getJSON('//query.yahooapis.com/v1/public/yql?q=' + encodeURIComponent('select * from json where url="' + queryURL + '"') + '&format=json').done(function(data) {
         if (callback != null) {
+            data.query.results.json.changed = Math.floor(Date.now() / 1000);
             callback(data.query.results.json);
         }
     }).fail(function() {
