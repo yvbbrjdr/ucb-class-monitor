@@ -135,8 +135,26 @@ $(document).ready(function() {
     });
     $('#refreshNowBtn').click(function() {
         $.each(classList, function(index, record) {
-            record.updateStatus(function() {
+            record.updateStatus(function(changed) {
                 makeTable();
+                if (changed) {
+                    Notification.requestPermission(function(status) {
+                        if (status == 'granted') {
+                            var n = new Notification('UC Berkeley Class Monitor', {
+                                'body' : 'Class ' + record.classID + ' has changed.',
+                                'icon' : 'favicon.ico'
+                            });
+                            n.onshow = function() {
+                                setTimeout(function() {
+                                    n.close();
+                                }, 5000);
+                            };
+                            n.onclick = function() {
+                                n.close();
+                            };
+                        }
+                    });
+                }
             });
         });
     });
@@ -165,4 +183,5 @@ $(document).ready(function() {
         makeTable();
         $('#refreshNowBtn').click();
     }
+    Notification.requestPermission();
 });
