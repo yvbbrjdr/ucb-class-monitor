@@ -19,9 +19,10 @@ function getClassStatus(termID, classID, callback) {
     });
 }
 
-function Record(termID, classID, status) {
+function Record(termID, classID, className, status) {
     this.termID = termID;
     this.classID = classID;
+    this.className = className;
     this.status = status;
     this.sameID = function(rhs) {
         return this.termID == rhs.termID && this.classID == rhs.classID;
@@ -49,6 +50,7 @@ function Record(termID, classID, status) {
         var content = '<tr>';
         content += '<td>' + this.termID + '</td>';
         content += '<td>' + this.status.classSections.id + '</td>';
+        content += '<td>' + this.className + '</td>';
         var status;
         if (parseInt(this.status.classSections.enrollmentStatus.enrolledCount) < parseInt(this.status.classSections.enrollmentStatus.maxEnroll)) {
             status = 'Open';
@@ -106,7 +108,7 @@ $(document).ready(function() {
                     $('#classID').val('');
                     $('#classID').focus();
                 } else {
-                    const record = new Record(termID, classID, data);
+                    const record = new Record(termID, classID, $('<div/>').text($('#className').val()).html(), data);
                     var ok = true;
                     $.each(classList, function(index, value) {
                         if (value.sameID(record)) {
@@ -141,7 +143,7 @@ $(document).ready(function() {
                     Notification.requestPermission(function(status) {
                         if (status == 'granted') {
                             var n = new Notification('UC Berkeley Class Monitor', {
-                                'body' : 'Class ' + record.classID + ' has changed.',
+                                'body' : record.className + ' has changed.',
                                 'icon' : 'favicon.ico'
                             });
                             n.onshow = function() {
@@ -178,7 +180,7 @@ $(document).ready(function() {
     if (ls != null) {
         classList = JSON.parse(ls);
         for (var i = 0 ; i < classList.length ; i++) {
-            classList[i] = new Record(classList[i].termID, classList[i].classID, classList[i].status);
+            classList[i] = new Record(classList[i].termID, classList[i].classID, classList[i].className, classList[i].status);
         }
         makeTable();
         $('#refreshNowBtn').click();
