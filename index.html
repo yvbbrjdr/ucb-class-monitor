@@ -70,7 +70,17 @@
                     <h3 class="panel-title">Refresh Settings</h3>
                 </div>
                 <div class="panel-body">
-                    <button type="button" id="refreshNowBtn" class="btn btn-primary">Refresh Now</button>
+                    <div class="form-inline">
+                        <button type="button" id="refreshNowBtn" class="btn btn-primary">Refresh Now</button>
+                        <div class="form-group">
+                            <label class="sr-only" for="interval">Auto Refresh Interval</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="interval" placeholder="Auto Refresh Interval">
+                                <div class="input-group-addon">s</div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-primary" id="confirmInterval">Confirm</button>
+                    </div>
                 </div>
             </div>
             <hr>

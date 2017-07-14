@@ -3,6 +3,7 @@
 const queryBaseURL = 'http://classes.berkeley.edu/enrollment/update/';
 
 var classList = [];
+var intervalID = -1;
 
 function getClassStatus(termID, classID, callback) {
     const queryURL = queryBaseURL + termID + '/' + classID;
@@ -28,6 +29,12 @@ function Record(termID, classID, status) {
     this.updateStatus = function(callback) {
         const self = this;
         getClassStatus(this.termID, this.classID, function(data) {
+            if (data == null) {
+                if (callback != null) {
+                    callback(false);
+                }
+                return;
+            }
             var changed = false;
             if (self.status.classSections.enrollmentStatus.enrolledCount != data.classSections.enrollmentStatus.enrolledCount || self.status.classSections.enrollmentStatus.waitlistedCount != data.classSections.enrollmentStatus.waitlistedCount) {
                 changed = true;
@@ -133,6 +140,22 @@ $(document).ready(function() {
             });
         });
     });
+    $('#confirmInterval').click(function() {
+        if (intervalID != -1) {
+            clearInterval(intervalID);
+        }
+        const interval = $('#interval').val();
+        if ($.isNumeric(interval) && interval > 0) {
+            intervalID = setInterval(function() {
+                $('#refreshNowBtn').click();
+            }, interval * 1000);
+            window.alert('Auto refresh interval is set successfully!');
+        } else {
+            window.alert('You entered an invalid number!');
+            $('#interval').val('');
+            $('#interval').focus();
+        }
+    });
     const ls = localStorage.getItem('classList');
     if (ls != null) {
         classList = JSON.parse(ls);
@@ -140,5 +163,6 @@ $(document).ready(function() {
             classList[i] = new Record(classList[i].termID, classList[i].classID, classList[i].status);
         }
         makeTable();
+        $('#refreshNowBtn').click();
     }
 });
