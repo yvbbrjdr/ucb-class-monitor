@@ -6,3 +6,11 @@
     text-align: center;
     vertical-align: middle;
 }
+
+.form-inline {
+    text-align: center;
+}
+
+pre {
+    white-space: pre-wrap;
+}
