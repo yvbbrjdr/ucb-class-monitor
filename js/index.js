@@ -95,6 +95,11 @@ $(document).ready(function() {
             $('#selectBtn').click();
         }
     });
+    $('#className').bind('keypress', function(event) {
+        if (event.keyCode == '13') {
+            $('#selectBtn').click();
+        }
+    });
     $('#selectBtn').click(function() {
         const termID = $('#termID').val();
         const classID = $('#classID').val();
